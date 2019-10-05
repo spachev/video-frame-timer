@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+<script src="vue.js">
+</script>
+<script src="jquery.js">
+</script>
+
+</head>
+<body>
+<div id="video-container">
+	<video  controls autoplay id="video">
+	</video>
+	<div id="time-overlay">0</div>
+	<button v-for="b in overlay_buttons" class="overlay-button" :id="b.id"
+		v-on:click="handle_click(b)">{{b.text}}</button>
+</div>
+
+<div>
+Video File: <input type="file" onchange="handle_file_select(event)">
+</div>
+<div>
+<span id="status"></span>
+</div>
+<script src="app.js">
+</script>
+</body>
+</html>

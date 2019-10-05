@@ -1,0 +1,39 @@
+#video {
+	z-index: 0;
+	position: relative;
+}
+
+#time-overlay {
+	color: #ffffc0;
+	z-index: 1;
+	position: absolute;
+	top: 50px;
+	left: 50px;
+}
+
+.overlay-button {
+	position: absolute;
+	z-index: 1;
+	width: 50px;
+	height: 20px;
+	opacity: 0.5;
+}
+
+.overlay-button#next-frame {
+	top: 50px;
+	left: 220px;
+}
+
+.overlay-button#prev-frame {
+	top: 50px;
+	left: 100px;
+}
+
+.overlay-button#start-time {
+	top: 50px;
+	left: 160px;
+}
+
+#video-container {
+	position: relative;
+}
