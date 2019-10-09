@@ -21,7 +21,7 @@
 
 .overlay-button#next-frame {
 	top: 50px;
-	left: 220px;
+	left: 280px;
 }
 
 .overlay-button#prev-frame {
@@ -32,6 +32,16 @@
 .overlay-button#start-time {
 	top: 50px;
 	left: 160px;
+}
+
+.overlay-button#record-time {
+	top: 50px;
+	left: 220px;
+}
+
+.times {
+	border: 1px solid;
+	border-collapse: collapse;
 }
 
 #video-container {

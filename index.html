@@ -6,24 +6,30 @@
 </script>
 <script src="jquery.js">
 </script>
+<script src="app.js">
+</script>
 
 </head>
 <body>
-<div id="video-container">
-	<video  controls autoplay id="video">
-	</video>
-	<div id="time-overlay">0</div>
-	<button v-for="b in overlay_buttons" class="overlay-button" :id="b.id"
-		v-on:click="handle_click(b)">{{b.text}}</button>
+<div id="container">
+	<div id="video-container">
+		<video  controls autoplay id="video">
+		</video>
+		<div id="time-overlay">0</div>
+		<button v-for="b in overlay_buttons" class="overlay-button" :id="b.id"
+			v-on:click="handle_click(b)">{{b.text}}</button>
+	</div>
+
+	<div>
+	Video File: <input type="file" onchange="handle_file_select(event)">
+	</div>
+	<div>
+	<table class="times">
+	<tr v-for="t in times"><td>{{t.fmt_t}}</td></tr>
+	</table>
+	<span id="status"></span>
+	</div>
 </div>
 
-<div>
-Video File: <input type="file" onchange="handle_file_select(event)">
-</div>
-<div>
-<span id="status"></span>
-</div>
-<script src="app.js">
-</script>
 </body>
 </html>
