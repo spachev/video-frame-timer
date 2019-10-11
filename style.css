@@ -1,6 +1,11 @@
 #video {
 	z-index: 0;
 	position: relative;
+	width: 640px;
+}
+
+#container {
+	margin: 0px 0px 0px 0px;
 }
 
 #time-overlay {
@@ -11,11 +16,23 @@
 	left: 50px;
 }
 
+.hidden {
+	display: none;
+}
+
+.file-button {
+	border: 1px solid black;
+	background-color: #0040c0;
+	color: white;
+	width: 150px;
+	text-align: center;
+}
+
 .overlay-button {
 	position: absolute;
 	z-index: 1;
 	width: 50px;
-	height: 20px;
+	height: 30px;
 	opacity: 0.5;
 }
 
@@ -39,9 +56,34 @@
 	left: 220px;
 }
 
-.times {
+#goto-time {
+	z-index: 1;
+	opacity: 0.5;
+	top: 100px;
+	left: 50px;
+	width: 100px;
+	position: absolute;
+}
+
+#find-participant {
+	top: 100px;
+	left: 220px;
+	z-index: 1;
+	opacity: 0.5;
+	position: absolute;
+}
+
+#error {
+	color: red;
+}
+
+.pretty-table {
 	border: 1px solid;
 	border-collapse: collapse;
+}
+
+.pretty-table td,th {
+	border: 1px solid black;
 }
 
 #video-container {

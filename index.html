@@ -2,34 +2,57 @@
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="style.css">
-<script src="vue.js">
-</script>
-<script src="jquery.js">
-</script>
-<script src="app.js">
-</script>
+<link href="VueBootstrapTypeahead.css" rel="stylesheet">
+<link rel="stylesheet" href="bootstrap.min.css">
+<script src="jquery.js"></script>
+<script src="bootstrap.min.js" ></script>
+<script src="vue-bootstrap-typeahead.min.js"></script>
+<script src="vue.js"></script>
+<script src="popper.min.js"></script>
+<script src="app.js"></script>
 
 </head>
 <body>
-<div id="container">
-	<div id="video-container">
-		<video  controls autoplay id="video">
-		</video>
-		<div id="time-overlay">0</div>
-		<button v-for="b in overlay_buttons" class="overlay-button" :id="b.id"
-			v-on:click="handle_click(b)">{{b.text}}</button>
-	</div>
-
-	<div>
-	Video File: <input type="file" onchange="handle_file_select(event)">
-	</div>
-	<div>
-	<table class="times">
-	<tr v-for="t in times"><td>{{t.fmt_t}}</td></tr>
-	</table>
-	<span id="status"></span>
+<div id="container" class="container">
+	<div class="row">
+		<div id="video-container" class="col-md-8">
+			<video  controls autoplay id="video">
+			</video>
+			<div id="time-overlay">0</div>
+			<button v-for="b in overlay_buttons" class="overlay-button" :id="b.id"
+				v-on:click="handle_click(b)">{{b.text}}</button>
+			<div id="find-participant">
+				<vue-bootstrap-typeahead
+					onclick="event.target.value=''"
+					:data="participants" :serializer="function (p) { return p.name}"
+					@hit="set_current_participant($event)" placeholder="Search for participant"
+				/>
+			</div>
+			<div id="goto-time">
+			<input type="text" placeholder="Go to time" v-on:change="goto_time($event.target.value)"
+				class="form-control">
+			</div>
+		</div>
+		<div class="col-md-4">
+			<table class="pretty-table">
+			<tr><th>Name</th><th>Gender</th><th>Age</th><th>Time</th></tr>
+			<tr v-for="p in participants"><td>{{p.name}}</td><td>{{p.gender}}</td>
+				<td>{{p.age}}</td><td>{{p.time ? p.time.fmt_t : ""}}</td></tr>
+			</table>
+			<span id="status"></span>
+			<span id="error"></span>
+		</div>
+	<div class="row">
+		<div class="col-md-4" v-for="f in file_inputs">
+				<input type="file"
+					v-on:change="handle_file_select(f, $event)"
+					class="hidden" :id="f.id">
+				<label :for="f.id" class="file-button">{{f.prompt}}</label>
+		</div>
+		<div class="col-md-4">
+			<button class="file-button" v-on:click="handle_export()">Export</button>
+		</div>
 	</div>
 </div>
-
 </body>
 </html>
