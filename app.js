@@ -1,6 +1,8 @@
 
 var FRAME_T = 1.0/29.97; // TODO: read frame rate from video
 var time_offset = 0.0;
+var K_IN_MILE = 1.60934;
+var DISP_EPS = 0.001;
 var container = null; // initialized later
 
 function fmt_time(t)
@@ -98,7 +100,7 @@ function set_time(t)
 
 function is_time(f)
 {
-	return f == "time";
+	return f == "time" || f == "pace";
 }
 
 function inc_time_pos(dt)
@@ -136,9 +138,10 @@ window.onload = function () {
 		el: '#container',
 		data: {
 			req_fields: ["name", "age", "gender"],
-			opt_fields: ["time"],
+			opt_fields: ["time", "pace"],
+			splits: null,
 			all_fields: null,
-			current_participant_name: 'Sasha',
+			distance: null,
 			overlay_buttons: [
 				{id: "prev-frame", text: "<<" },
 				{id: "next-frame", text: ">>"},
@@ -151,6 +154,32 @@ window.onload = function () {
 			],
 			participants: [],
 			current_participant: null
+		},
+		computed: {
+			distance_str: {
+				set: function (d_str) {
+					var vm = this;
+					d_str = d_str.trim().toLowerCase();
+					vm.distance = parseFloat(d_str);
+
+					if (d_str.endsWith("k"))
+					{
+						vm.distance /= K_IN_MILE;
+					}
+
+					vm.update_pace();
+				},
+				get: function() {
+					var vm = this;
+
+					if (!vm.distance)
+						return "";
+
+					if (Math.abs(vm.distance - Math.round(vm.distance)) < DISP_EPS)
+						return vm.distance;
+					return Math.round(vm.distance * K_IN_MILE) + "K";
+				}
+			}
 		},
 		methods: {
 			handle_click: function (b) {
@@ -229,8 +258,16 @@ window.onload = function () {
 				if (!vm.current_participant)
 					return;
 				vm.current_participant.time = t_o;
+				vm.update_pace_for_participant(vm.current_participant);
 				vm.sort_participants();
-				vm.current_participant_name = '';
+			},
+			update_pace: function() {
+				var i;
+				var vm = this;
+				for (i = 0; i < vm.participants; i++)
+				{
+					vm.update_pace_for_participant(vm.participants[i]);
+				}
 			},
 			sort_participants: function () {
 				this.participants.sort(function (a,b) {
@@ -253,6 +290,30 @@ window.onload = function () {
 					field_map[fields[i]] = pos;
 				}
 			},
+			update_pace_for_participant: function(p) {
+				var vm = this;
+				if (!vm.distance)
+					return;
+				p.pace = fmt_time(p.time.t/vm.distance);
+			},
+			get_time: function (t) {
+				return t ? t.fmt_t : "";
+			},
+			init_splits: function(field_map, header) {
+				var vm = this;
+				vm.splits = [];
+				field_map.splits = {};
+
+				for (var i = 0; i < header.length; i++)
+				{
+					var f = header[i];
+					if (!f.startsWith("split"))
+						continue;
+					var parts = f.split(/\s+/, 2);
+					vm.splits.push(parts[1]);
+					field_map.splits[parts[1]] = i;
+				}
+			},
 			init_participants: function (data) {
 				var vm = this;
 				var lines = data.split(/\n|\r\n/);
@@ -262,6 +323,7 @@ window.onload = function () {
 				vm.all_fields = vm.req_fields.concat(vm.opt_fields);
 				vm.update_field_map(field_map, header, vm.req_fields, true);
 				vm.update_field_map(field_map, header, vm.opt_fields, false);
+				vm.init_splits(field_map, header);
 				vm.participants = [];
 
 				for (var i = 1; i < lines.length; i++)
@@ -277,13 +339,24 @@ window.onload = function () {
 					{
 						var f = vm.all_fields[j];
 						var v = line_data[field_map[f]];
-						if (f == "time" && v)
-							v = {t: parse_time(v), fmt_t: v};
+						if (is_time(f) && v)
+						{
+							var t = parse_time(v);
+							v = {t: t, fmt_t: fmt_time(t)};
+						}
 						o[f] = v;
 					}
 
+					vm.update_pace_for_participant(o);
+					vm.update_splits_for_participant(o, line_data, field_map);
 					vm.participants.push(o);
 				}
+			},
+			update_splits_for_participant: function (p, line_data, field_map) {
+				var vm = this;
+				p.splits = vm.splits.map(function (s) {
+					return line_data[field_map.splits[s]];
+				});
 			},
 			set_current_participant: function (p) {
 				this.current_participant = p;
