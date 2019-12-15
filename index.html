@@ -41,6 +41,11 @@
 					<input type="text" placeholder="Go to time" v-on:change="goto_time($event.target.value)"
 						class="form-control">
 					</div>
+					<div id="select-split" class="overlay-button">
+						<select v-model="current_split" class="form-control">
+							<option v-for="s in split_inputs" :value="s.pos">{{s.txt}}</option>
+						</select>
+					</div>
 				</div>
 			</div>
 			<div class="col-md-12">
@@ -60,11 +65,19 @@
 		<div class="col-md-4">
 			<table class="pretty-table">
 			<tr><th>Name</th><th>Gender</th><th>Age</th><th>Time</th><th>Pace</th>
-				<th v-for="s in splits">Split {{s}}</th>
+				<template v-for="s in splits">
+					<th>Split {{s}}</th>
+					<th>Pace to {{s}}</th>
+				</template>
+				<th>Pace to Finish</th>
 			</tr>
 			<tr v-for="p in participants"><td>{{p.name}}</td><td>{{p.gender}}</td>
 				<td>{{p.age}}</td><td>{{get_time(p.time)}}</td><td>{{get_time(p.pace)}}</td>
-				<td v-for="s in splits">{{p.splits[s]}}</td>
+				<template v-for="(s,i) in splits">
+					<td>{{get_time(p.splits[i])}}</td>
+					<td>{{get_time(p.pace_to[s])}}</td>
+				</template>
+				<td>{{get_time(p.pace_to[distance])}}</td>
 				</tr>
 			</table>
 			<span id="status"></span>

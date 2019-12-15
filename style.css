@@ -20,6 +20,7 @@
 	display: none;
 }
 
+
 .file-button {
 	border: 1px solid black;
 	background-color: #0040c0;
@@ -54,6 +55,12 @@
 .overlay-button#record-time {
 	top: 50px;
 	left: 220px;
+}
+
+#select-split {
+	top: 100px;
+	left: 440px;
+	width: 100px;
 }
 
 #goto-time {

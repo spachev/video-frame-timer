@@ -7,6 +7,8 @@ var container = null; // initialized later
 
 function fmt_time(t)
 {
+	if (typeof t !== "number" || isNaN(t))
+		return "";
 	var ss, mm, hh;
 	var sign = "";
 
@@ -120,12 +122,14 @@ function show_error(msg)
 
 function parse_time(t_str)
 {
+	if (typeof t_str !== "string" && typeof t_str !== "number")
+		return NaN;
 	var parts = t_str.split(":");
 	var t = 0;
 	for (var i = 0; i < parts.length; i++)
 	{
 		var n = parseFloat(parts[i]);
-		if (n === NaN)
+		if (isNaN(n))
 			return NaN;
 		t = t * 60 + n;
 	}
@@ -142,6 +146,7 @@ window.onload = function () {
 			splits: null,
 			all_fields: null,
 			distance: null,
+			current_split: -1,
 			overlay_buttons: [
 				{id: "prev-frame", text: "<<" },
 				{id: "next-frame", text: ">>"},
@@ -156,6 +161,14 @@ window.onload = function () {
 			current_participant: null
 		},
 		computed: {
+			split_inputs: function () {
+				var res = [ {pos: -1, txt: "Finish" }];
+				if (this.splits && this.splits.length)
+					res = res.concat(this.splits.map(function (el, i) {
+						return {pos: i, txt: el};
+					}));
+				return res;
+			},
 			distance_str: {
 				set: function (d_str) {
 					var vm = this;
@@ -166,7 +179,7 @@ window.onload = function () {
 					{
 						vm.distance /= K_IN_MILE;
 					}
-
+					console.log("Updating pace");
 					vm.update_pace();
 				},
 				get: function() {
@@ -215,13 +228,20 @@ window.onload = function () {
 			},
 			handle_export: function () {
 				var vm = this;
-				var export_line = vm.all_fields.map(ucfirst) + "\r\n";
+				var header = vm.all_fields.map(ucfirst).concat(vm.splits.map(
+					function (s) { return "Split " + s;}
+				));
+				var export_line = arr_to_csv_row(header);
 				var data = export_line;
 				for (var i = 0; i < vm.participants.length; i++)
 				{
+					var p = vm.participants[i];
 					var arr = vm.all_fields.map(function (f) {
-						return vm.fmt_field(f, vm.participants[i][f]);
+						return vm.fmt_field(f, p[f]);
 					});
+					arr = arr.concat(vm.splits.map(function (s, i) {
+						return vm.get_time(p.splits[i]);
+					}));
 					data += arr_to_csv_row(arr);
 				}
 
@@ -246,7 +266,7 @@ window.onload = function () {
 			},
 			goto_time: function (t_str) {
 				var t = parse_time(t_str);
-				if (t === NaN)
+				if (isNaN(t))
 					return;
 				set_time(t + time_offset);
 				update_time();
@@ -257,14 +277,21 @@ window.onload = function () {
 				var vm = this;
 				if (!vm.current_participant)
 					return;
-				vm.current_participant.time = t_o;
+
+				if (vm.current_split == -1 /* Finish */)
+					vm.current_participant.time = t_o;
+				else
+				{
+					vm.current_participant.splits[vm.current_split] = t_o;
+				}
+
 				vm.update_pace_for_participant(vm.current_participant);
 				vm.sort_participants();
 			},
 			update_pace: function() {
 				var i;
 				var vm = this;
-				for (i = 0; i < vm.participants; i++)
+				for (i = 0; i < vm.participants.length; i++)
 				{
 					vm.update_pace_for_participant(vm.participants[i]);
 				}
@@ -292,9 +319,36 @@ window.onload = function () {
 			},
 			update_pace_for_participant: function(p) {
 				var vm = this;
+				p.pace_to = [];
 				if (!vm.distance)
 					return;
-				p.pace = fmt_time(p.time.t/vm.distance);
+				p.pace = vm.get_time_obj(p.time.t/vm.distance);
+				var work_splits = vm.splits.slice();
+				work_splits.push(vm.distance);
+
+				for (var i = 0; i < work_splits.length; i++)
+				{
+					var d = work_splits[i];
+					var cur_t = i < p.splits.length ? p.splits[i].t : p.time.t;
+					var prev_t = 0,prev_d = 0;
+					if (i)
+					{
+						prev_d = work_splits[i-1];
+						prev_t = p.splits[i-1].t;
+					}
+					var dt = cur_t - prev_t;
+					var dd = parseFloat(d) - parseFloat(prev_d);
+					console.log("dd:", dd, "dt:", dt);
+					var pace_t = vm.get_time_obj(dd ? dt / dd : 0);
+					p.pace_to[d] = pace_t;
+				}
+
+				console.log("with splits paces:", p);
+			},
+			get_time_obj: function (t) {
+				if (typeof t !== "number")
+					return {t: null, fmt_t: ""};
+				return {t: t, fmt_t: fmt_time(t)};
 			},
 			get_time: function (t) {
 				return t ? t.fmt_t : "";
@@ -347,15 +401,16 @@ window.onload = function () {
 						o[f] = v;
 					}
 
-					vm.update_pace_for_participant(o);
 					vm.update_splits_for_participant(o, line_data, field_map);
+					vm.update_pace_for_participant(o);
+					//console.log("part:", o);
 					vm.participants.push(o);
 				}
 			},
 			update_splits_for_participant: function (p, line_data, field_map) {
 				var vm = this;
 				p.splits = vm.splits.map(function (s) {
-					return line_data[field_map.splits[s]];
+					return vm.get_time_obj(parse_time(line_data[field_map.splits[s]]));
 				});
 			},
 			set_current_participant: function (p) {
