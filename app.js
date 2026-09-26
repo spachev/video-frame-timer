@@ -1,9 +1,43 @@
 
-var FRAME_T = 1.0/29.97; // TODO: read frame rate from video
+var FRAME_T = 1.0/29.97; // default
 var time_offset = 0.0;
 var K_IN_MILE = 1.60934;
 var DISP_EPS = 0.001;
 var container = null; // initialized later
+
+function init_frame_rate_detection(videoElement) {
+    // If a jQuery object was passed, get the underlying DOM element
+    if (window.jQuery && videoElement instanceof jQuery) {
+        videoElement = videoElement[0];
+    }
+
+    if (!videoElement || !videoElement.requestVideoFrameCallback) {
+        console.error("Video element not found or browser does not support requestVideoFrameCallback");
+        return;
+    }
+
+    let frameCount = 0;
+    let startTime = 0;
+
+    const checkFrame = (now, metadata) => {
+        if (startTime === 0) {
+            startTime = now;
+        } else {
+            const elapsed = (now - startTime) / 1000;
+            frameCount++;
+
+            if (frameCount >= 30) {
+                const fps = frameCount / elapsed;
+                FRAME_T = 1.0 / fps; // Updates global variable in app.js
+                console.log("Detected FPS: " + fps.toFixed(2));
+                return;
+            }
+        }
+        videoElement.requestVideoFrameCallback(checkFrame);
+    };
+
+    videoElement.requestVideoFrameCallback(checkFrame);
+}
 
 function fmt_time(t)
 {
@@ -209,6 +243,7 @@ window.onload = function () {
 					return;
 				var f = e.target.files[0];
 				$('#video').attr("src", URL.createObjectURL(f));
+				init_frame_rate_detection($("#video")[0]);
 				$('#video').bind("timeupdate", update_time);
 			},
 			handle_participant_file_select: function (e)
@@ -305,12 +340,13 @@ window.onload = function () {
 				});
 			},
 			update_field_map: function (field_map, header, fields, is_req) {
+				vm = this;
 				for (var i = 0; i < fields.length; i++)
 				{
 					var pos = header.indexOf(fields[i]);
 					if (is_req && !(pos >= 0))
 					{
-						show_error("Missing required field " + req_fields[i]);
+						show_error("Missing required field " + vm.req_fields[i]);
 						return;
 					}
 
@@ -383,6 +419,7 @@ window.onload = function () {
 				for (var i = 1; i < lines.length; i++)
 				{
 					var line_data = parse_csv(lines[i]);
+					console.log("line_data:", line_data);
 
 					if (!line_data || !line_data[field_map.name])
 						continue;
@@ -403,7 +440,7 @@ window.onload = function () {
 
 					vm.update_splits_for_participant(o, line_data, field_map);
 					vm.update_pace_for_participant(o);
-					//console.log("part:", o);
+					console.log("part:", o);
 					vm.participants.push(o);
 				}
 			},
