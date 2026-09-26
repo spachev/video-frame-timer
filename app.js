@@ -175,7 +175,7 @@ window.onload = function () {
 	container = new Vue({
 		el: '#container',
 		data: {
-			req_fields: ["name", "age", "gender"],
+			req_fields: ["name", "age", "gender", "bib"],
 			opt_fields: ["time", "pace"],
 			splits: null,
 			all_fields: null,
@@ -407,7 +407,7 @@ window.onload = function () {
 			init_participants: function (data) {
 				var vm = this;
 				var lines = data.split(/\n|\r\n/);
-				var header = parse_csv(lines[0].toLowerCase());
+				var header = parse_csv(lines[0].toLowerCase()).map(f => f.trim());
 				var field_map = {};
 
 				vm.all_fields = vm.req_fields.concat(vm.opt_fields);
@@ -418,7 +418,7 @@ window.onload = function () {
 
 				for (var i = 1; i < lines.length; i++)
 				{
-					var line_data = parse_csv(lines[i]);
+					var line_data = parse_csv(lines[i]).map(s => s.trim());
 					console.log("line_data:", line_data);
 
 					if (!line_data || !line_data[field_map.name])

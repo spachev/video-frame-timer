@@ -33,7 +33,7 @@
 					<div id="find-participant">
 						<vue-bootstrap-typeahead
 							onclick="event.target.value=''"
-							:data="participants" :serializer="function (p) { return p.name}"
+							:data="participants" :serializer="function (p) { return p.bib + ' ' + p.name}"
 							@hit="set_current_participant($event)" placeholder="Search for participant"
 						/>
 					</div>
