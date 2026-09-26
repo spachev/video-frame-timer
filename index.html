@@ -33,7 +33,7 @@
 					<div id="find-participant">
 						<vue-bootstrap-typeahead
 							onclick="event.target.value=''"
-							:data="participants" :serializer="function (p) { return p.bib + ' ' + p.name}"
+							:data="participants" :serializer="function (p) { return (p.bib ?? '') + ' ' + p.name}"
 							@hit="set_current_participant($event)" placeholder="Search for participant"
 						/>
 					</div>
@@ -64,14 +64,14 @@
 
 		<div class="col-md-4">
 			<table class="pretty-table">
-			<tr><th>Name</th><th>Gender</th><th>Age</th><th>Time</th><th>Pace</th>
+			<tr><th>Bib</th><th>Name</th><th>Gender</th><th>Age</th><th>Time</th><th>Pace</th>
 				<template v-for="s in splits">
 					<th>Split {{s}}</th>
 					<th>Pace to {{s}}</th>
 				</template>
 				<th>Pace to Finish</th>
 			</tr>
-			<tr v-for="p in participants"><td>{{p.name}}</td><td>{{p.gender}}</td>
+			<tr v-for="p in participants"><td>{{p.bib}}</td><td>{{p.name}}</td><td>{{p.gender}}</td>
 				<td>{{p.age}}</td><td>{{get_time(p.time)}}</td><td>{{get_time(p.pace)}}</td>
 				<template v-for="(s,i) in splits">
 					<td>{{get_time(p.splits[i])}}</td>
